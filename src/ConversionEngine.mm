@@ -32,12 +32,21 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (void)initDatabase {
-    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
-    NSURL *url = [bundle URLForResource:@"words_with_frequency_and_translation_and_ipa" withExtension:@"sqlite3"];
-    if (!url) {
-        url = [[NSBundle mainBundle] URLForResource:@"words_with_frequency_and_translation_and_ipa" withExtension:@"sqlite3"];
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSString *dbPath = [bundle pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
+    if (!dbPath) {
+        bundle = [NSBundle bundleForClass:[self class]];
+        dbPath = [bundle pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
     }
-    _dbQueue = [FMDatabaseQueue databaseQueueWithURL:url];
+    if (!dbPath) {
+        NSLog(@"[Hallelujah] ERROR: words_with_frequency_and_translation_and_ipa.sqlite3 not found in bundle");
+        return;
+    }
+    NSLog(@"[Hallelujah] Opening database at: %@", dbPath);
+    _dbQueue = [FMDatabaseQueue databaseQueueWithPath:dbPath];
+    if (!_dbQueue) {
+        NSLog(@"[Hallelujah] ERROR: Failed to open database at %@", dbPath);
+    }
 }
 
 - (NSDictionary *)getPinyinData {
@@ -65,6 +74,7 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (NSMutableArray *)wordsStartsWith:(NSString *)prefix {
+    if (!_dbQueue) return [[NSMutableArray alloc] init];
     __block NSMutableArray *filtered = [[NSMutableArray alloc] init];
     NSString *lowerPrefix = [prefix lowercaseString];
     [_dbQueue inDatabase:^(FMDatabase *db) {
@@ -80,6 +90,7 @@ NSDictionary *deserializeJSON(NSString *path) {
 
 - (NSArray *)sortWordsByFrequency:(NSArray *)filtered {
     if (filtered.count == 0) return filtered;
+    if (!_dbQueue) return filtered;
 
     NSMutableArray *placeholders = [NSMutableArray array];
     for (NSUInteger i = 0; i < filtered.count; i++) {
@@ -105,6 +116,7 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (NSArray *)getTranslations:(NSString *)word {
+    if (!_dbQueue) return @[];
     __block NSArray *translation = @[];
     [_dbQueue inDatabase:^(FMDatabase *db) {
         NSString *sql = @"SELECT translation FROM words WHERE word = ?";
