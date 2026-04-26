@@ -37,7 +37,9 @@
 
 > **⚠️ Attention:** macOS 14 以上系统用户需要在 Input source 中手动添加 Hallelujah 输入法：
 <img width="651" alt="image" src="https://github.com/user-attachments/assets/f68fbe99-f62b-496d-9233-3de6f1ad2f87" />
-<img width="581" alt="image" src="https://github.com/user-attachments/assets/b2573ad0-3dbf-44c9-80f2-127c96811c66" />
+<img width="550" height="373" alt="image" src="https://github.com/user-attachments/assets/0f5bb3d1-82f5-4759-a8e7-b91e5f3865d7" />
+
+
 
 
 
