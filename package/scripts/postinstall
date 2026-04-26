@@ -1,9 +1,17 @@
 #!/bin/bash
 
-pkill -9 hallelujah && rm -rf ~/Library/Input\ Methods/hallelujah.app/
-
 login_user=`/usr/bin/stat -f%Su /dev/console`
 USER_HOME=$(eval echo ~${login_user})
+
+# deactivate input source to prevent auto-restart on kill
+/usr/bin/sudo -u "${login_user}" "/Library/Input Methods/hallelujah.app/Contents/MacOS/hallelujah" --deactivate 2>/dev/null || true
+
+# kill old process (won't auto-restart since deselected)
+pkill -9 hallelujah 2>/dev/null || true
+sleep 1
+pkill -9 hallelujah 2>/dev/null || true
+
+rm -rf "${USER_HOME}/Library/Input Methods/hallelujah.app/" 2>/dev/null || true
 
 # clear Text Input Source cache to force clean re-registration
 rm -f "${USER_HOME}/Library/Preferences/ByHost/com.apple.HIToolbox."*.plist 2>/dev/null || true
@@ -15,6 +23,7 @@ mkdir -p "${DB_DIR}"
 cp "/Library/Input Methods/hallelujah.app/Contents/Resources/words_with_frequency_and_translation_and_ipa.sqlite3" "${DB_DIR}/"
 chown -R "${login_user}" "${DB_DIR}"
 
+# register and activate the new input source
 /usr/bin/sudo -u "${login_user}" "/Library/Input Methods/hallelujah.app/Contents/MacOS/hallelujah" --install
 
 # refresh the preferences cache for the login user

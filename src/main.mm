@@ -65,6 +65,11 @@ void initPreference() {
 }
 
 int main(int argc, char *argv[]) {
+    if (argc > 1 && !strcmp("--deactivate", argv[1])) {
+        deactivateInputSource();
+        return 0;
+    }
+
     if (argc > 1 && !strcmp("--install", argv[1])) {
         registerInputSource();
         deactivateInputSource();
