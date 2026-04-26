@@ -3,9 +3,13 @@
 pkill -9 hallelujah && rm -rf ~/Library/Input\ Methods/hallelujah.app/
 
 login_user=`/usr/bin/stat -f%Su /dev/console`
+USER_HOME=$(eval echo ~${login_user})
+
+# clear Text Input Source cache to force clean re-registration
+rm -f "${USER_HOME}/Library/Preferences/ByHost/com.apple.HIToolbox."*.plist 2>/dev/null || true
+rm -f "${USER_HOME}/Library/Preferences/com.apple.HIToolbox.plist" 2>/dev/null || true
 
 # copy sqlite database to writable user directory
-USER_HOME=$(eval echo ~${login_user})
 DB_DIR="${USER_HOME}/Library/Application Support/hallelujah"
 mkdir -p "${DB_DIR}"
 cp "/Library/Input Methods/hallelujah.app/Contents/Resources/words_with_frequency_and_translation_and_ipa.sqlite3" "${DB_DIR}/"
@@ -13,7 +17,7 @@ chown -R "${login_user}" "${DB_DIR}"
 
 /usr/bin/sudo -u "${login_user}" "/Library/Input Methods/hallelujah.app/Contents/MacOS/hallelujah" --install
 
-# refresh the preferences cache
-killall -u $USER cfprefsd
+# refresh the preferences cache for the login user
+/usr/bin/sudo -u "${login_user}" killall -HUP cfprefsd 2>/dev/null || true
 
 echo "hallelujah input method registered and activated successfully" > /tmp/hallelujah-postinstall

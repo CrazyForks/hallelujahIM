@@ -50,8 +50,9 @@ void deactivateInputSource() {
         TISInputSourceRef inputSource = (TISInputSourceRef)(CFArrayGetValueAtIndex(sourceList, i - 1));
         NSString *sourceID = (__bridge NSString *)(TISGetInputSourceProperty(inputSource, kTISPropertyInputSourceID));
         if ([sourceID isEqualToString:kSourceID]) {
+            TISDeselectInputSource(inputSource);
             TISDisableInputSource(inputSource);
-            NSLog(@"Disabled input source: %@", sourceID);
+            NSLog(@"Deselected and disabled input source: %@", sourceID);
         }
     }
     CFRelease(sourceList);
