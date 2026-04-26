@@ -61,25 +61,13 @@ setup:<br/>
 
 GPL3(GNU GENERAL PUBLIC LICENSE Version 3)
 
-## About libmarisa / marisa-trie
+## Data Storage
 
-1. The static `libmarisa.a` lib was built from [marisa-trie](https://github.com/s-yata/marisa-trie) @`006020c1df76d0d7dc6118dacc22da64da2e35c4`.
-2. To build the `libmarisa.a` lib, run:
-
-```bash
-git clone git://github.com/s-yata/marisa-trie.git
-cd marisa-trie
-brew install autoconf automake libtool -verbose
-autoreconf -i
-./configure --enable-static
-make
-## ls -alh lib/marisa/.libs/libmarisa.a
-make install ## we can use marisa-build marisa-lookup marisa-reverse-lookup marisa-common-prefix-search marisa-predictive-search marisa-dump marisa-benchmark cli commands to do some tests and pre-build the trie data.
-```
+This input method uses SQLite database to store English word frequency, Chinese translation, and IPA pronunciation. Candidate words are queried via prefix matching. The database contains approximately 140,402 words, queried using FMDB (SQLite wrapper).
 
 ### Thanks to the following projects:
 
-1. [marisa-trie](https://github.com/s-yata/marisa-trie)
+1. [FMDB](https://github.com/ccgus/fmdb), SQLite wrapper for efficient prefix matching queries.
 2. dictionary/cedict.json is transformed from [cc-cedict](https://cc-cedict.org/wiki/)
 3. [cmudict](http://www.speech.cs.cmu.edu/cgi-bin/cmudict) and https://github.com/mphilli/English-to-IPA
 4. [GCDWebServer](https://github.com/swisspol/GCDWebServer)

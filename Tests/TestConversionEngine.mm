@@ -13,22 +13,12 @@
     self.engine = [ConversionEngine sharedEngine];
 }
 
-- (void)testWordsWithFrequencyAndTranslation {
-    NSDictionary *dict = self.engine.wordsWithFrequencyAndTranslation;
-    NSArray *allKeys = [dict allKeys];
-    XCTAssert([allKeys count] == 140402);
-    NSDictionary *word = [dict objectForKey:@"test"];
-    int frequency = [[word objectForKey:@"frequency"] intValue];
-    XCTAssert(frequency == 154999587);
-    NSArray *translation = [word objectForKey:@"translation"];
-    XCTAssert(translation.count == 2);
-}
 - (void)testWordsStartsWith {
     NSArray *words = [self.engine wordsStartsWith:@"tes"];
-    XCTAssert(words.count == 95);
-    NSArray *words5 = [words subarrayWithRange:NSMakeRange(0, 5)];
+    XCTAssert(words.count == 64);
     XCTAssertTrue([[words objectAtIndex:0] isEqualToString:@"test"]);
-    XCTAssertTrue([[words5 componentsJoinedByString:@";"] isEqualToString:@"test;testing;testings;testim;testimonial"]);
+    NSArray *words5 = [words subarrayWithRange:NSMakeRange(0, 5)];
+    XCTAssertTrue([[words5 componentsJoinedByString:@";"] isEqualToString:@"test;testing;tests;tested;testimonials"]);
 }
 
 - (void)testSortWordsByFrequency {

@@ -95,25 +95,13 @@ https://www.deepwiki.com/dongyuwei/hallelujahIM
 
 GPL3(GNU GENERAL PUBLIC LICENSE Version 3)
 
-## 构建 libmarisa.a
+## 数据存储
 
-1. The static `libmarisa.a` lib was built from [marisa-trie](https://github.com/s-yata/marisa-trie) @`006020c1df76d0d7dc6118dacc22da64da2e35c4`.
-2. To build the `libmarisa.a` lib, run:
-
-```bash
-git clone git://github.com/s-yata/marisa-trie.git
-cd marisa-trie
-brew install autoconf automake libtool -verbose ## proxychains4 -f /usr/local/etc/proxychains.conf brew install autoconf automake libtool -verbose
-autoreconf -i
-./configure --enable-static
-make
-## ls -alh lib/marisa/.libs/libmarisa.a
-make install ## we can use marisa-build marisa-lookup marisa-reverse-lookup marisa-common-prefix-search marisa-predictive-search marisa-dump marisa-benchmark cli commands to do some tests and pre-build the trie data.
-```
+本输入法使用 SQLite 数据库存储英文单词词频、中文释义和国际音标，通过前缀匹配查询候选词。数据库包含约 140,402 个单词，基于 FMDB (SQLite wrapper) 进行查询。
 
 ## 感谢以下开源项目:
 
-1. [marisa-trie](https://github.com/s-yata/marisa-trie)，输入时前缀匹配的数据结构及算法实现，特点是高性能、节省空间，可以预先构建好 trie 树再反序列化到内存中。
+1. [FMDB](https://github.com/ccgus/fmdb)，SQLite 数据库封装库，用于高效的前缀匹配查询。
 2. dictionary/cedict.json is transformed from [cc-cedict](https://cc-cedict.org/wiki/)，拼音-英语词库。
 3. [cmudict](http://www.speech.cs.cmu.edu/cgi-bin/cmudict) and https://github.com/mphilli/English-to-IPA， 国际音标。
 4. [GCDWebServer](https://github.com/swisspol/GCDWebServer)，用于用户使用偏好配置。

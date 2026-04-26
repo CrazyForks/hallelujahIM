@@ -4,14 +4,13 @@ NSDictionary *deserializeJSON(NSString *path) {
     NSInputStream *inputStream = [[NSInputStream alloc] initWithFileAtPath:path];
     [inputStream open];
     NSDictionary *dict = [NSJSONSerialization JSONObjectWithStream:inputStream options:nil error:nil];
-
     [inputStream close];
     return dict;
 }
 
-marisa::Trie trie;
-
-@implementation ConversionEngine
+@implementation ConversionEngine {
+    FMDatabaseQueue *_dbQueue;
+}
 
 + (instancetype)sharedEngine {
     static dispatch_once_t once;
@@ -25,27 +24,20 @@ marisa::Trie trie;
 }
 
 - (void)loadPreparedData {
-    // Dispatch the loading process to a background queue.
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-        [self loadTrie];
-        self.wordsWithFrequencyAndTranslation = [self getWordsWithFrequencyAndTranslation];
-        self.substitutions = [self getUserDefinedSubstitutions];
-        self.pinyinDict = [self getPinyinData];
-        self.phonexEncoded = [self getPhonexEncodedWords];
-        self.phonexEncoder = [self getPhonexEncoder];
-    });
+    [self initDatabase];
+    self.substitutions = [self getUserDefinedSubstitutions];
+    self.pinyinDict = [self getPinyinData];
+    self.phonexEncoded = [self getPhonexEncodedWords];
+    self.phonexEncoder = [self getPhonexEncoder];
 }
 
-
-- (void)loadTrie {
-    NSString *path = [[NSBundle mainBundle] pathForResource:@"google_227800_words" ofType:@"bin"];
-    const char *path2 = [path cStringUsingEncoding:[NSString defaultCStringEncoding]];
-    trie.load(path2);
-}
-
-- (NSDictionary *)getWordsWithFrequencyAndTranslation {
-    NSString *path = [[NSBundle mainBundle] pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"json"];
-    return deserializeJSON(path);
+- (void)initDatabase {
+    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
+    NSURL *url = [bundle URLForResource:@"words_with_frequency_and_translation_and_ipa" withExtension:@"sqlite3"];
+    if (!url) {
+        url = [[NSBundle mainBundle] URLForResource:@"words_with_frequency_and_translation_and_ipa" withExtension:@"sqlite3"];
+    }
+    _dbQueue = [FMDatabaseQueue databaseQueueWithURL:url];
 }
 
 - (NSDictionary *)getPinyinData {
@@ -72,35 +64,39 @@ marisa::Trie trie;
     return context[@"phonex"];
 }
 
-- (NSMutableArray *)wordsStartsWith:(NSString *)buffer {
-    marisa::Agent agent;
-    const char *query = [buffer cStringUsingEncoding:[NSString defaultCStringEncoding]];
-    agent.set_query(query);
-
-    NSMutableArray *filtered = [[NSMutableArray alloc] init];
-    while (trie.predictive_search(agent)) {
-        const marisa::Key key = agent.key();
-        NSString *word = [[NSString alloc] initWithBytes:key.ptr() length:key.length() encoding:NSASCIIStringEncoding];
-        [filtered addObject:word];
-    }
+- (NSMutableArray *)wordsStartsWith:(NSString *)prefix {
+    __block NSMutableArray *filtered = [[NSMutableArray alloc] init];
+    NSString *lowerPrefix = [prefix lowercaseString];
+    [_dbQueue inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"SELECT word FROM words WHERE word LIKE ? ORDER BY frequency DESC";
+        NSString *pattern = [NSString stringWithFormat:@"%@%%", lowerPrefix];
+        FMResultSet *resultSet = [db executeQuery:sql, pattern];
+        while ([resultSet next]) {
+            [filtered addObject:[resultSet stringForColumn:@"word"]];
+        }
+    }];
     return filtered;
 }
 
 - (NSArray *)sortWordsByFrequency:(NSArray *)filtered {
-    NSDictionary *words = self.wordsWithFrequencyAndTranslation;
-    NSArray *sorted = [filtered sortedArrayUsingComparator:^NSComparisonResult(id word1, id word2) {
-        NSDictionary *dict1 = words[word1];
-        NSDictionary *dict2 = words[word2];
-        int64_t n = [dict1[@"frequency"] longLongValue] - [dict2[@"frequency"] longLongValue];
-        if (n > 0) {
-            return (NSComparisonResult)NSOrderedAscending;
-        }
-        if (n < 0) {
-            return (NSComparisonResult)NSOrderedDescending;
-        }
-        return (NSComparisonResult)NSOrderedSame;
-    }];
+    if (filtered.count == 0) return filtered;
 
+    NSMutableArray *placeholders = [NSMutableArray array];
+    for (NSUInteger i = 0; i < filtered.count; i++) {
+        [placeholders addObject:@"?"];
+    }
+    NSString *sql = [NSString stringWithFormat:@"SELECT word FROM words WHERE word IN (%@) ORDER BY frequency DESC",
+                     [placeholders componentsJoinedByString:@","]];
+
+    __block NSArray *sorted;
+    [_dbQueue inDatabase:^(FMDatabase *db) {
+        FMResultSet *resultSet = [db executeQuery:sql withArgumentsInArray:filtered];
+        NSMutableArray *result = [NSMutableArray array];
+        while ([resultSet next]) {
+            [result addObject:[resultSet stringForColumn:@"word"]];
+        }
+        sorted = [result copy];
+    }];
     return sorted;
 }
 
@@ -109,13 +105,32 @@ marisa::Trie trie;
 }
 
 - (NSArray *)getTranslations:(NSString *)word {
-    return (self.wordsWithFrequencyAndTranslation)[word][@"translation"];
+    __block NSArray *translation = @[];
+    [_dbQueue inDatabase:^(FMDatabase *db) {
+        NSString *sql = @"SELECT translation FROM words WHERE word = ?";
+        FMResultSet *resultSet = [db executeQuery:sql, word.lowercaseString];
+        if ([resultSet next]) {
+            NSString *transStr = [resultSet stringForColumn:@"translation"];
+            if (transStr && transStr.length > 0) {
+                translation = [transStr componentsSeparatedByString:@"|"];
+            }
+        }
+    }];
+    return translation;
 }
 
 - (NSString *)getPhoneticSymbolOfWord:(NSString *)candidateString {
     if (candidateString && candidateString.length > 3) {
+        __block NSString *ipa = nil;
         NSString *word = candidateString.lowercaseString;
-        return (self.wordsWithFrequencyAndTranslation)[word][@"ipa"];
+        [_dbQueue inDatabase:^(FMDatabase *db) {
+            NSString *sql = @"SELECT ipa FROM words WHERE word = ?";
+            FMResultSet *resultSet = [db executeQuery:sql, word];
+            if ([resultSet next]) {
+                ipa = [resultSet stringForColumn:@"ipa"];
+            }
+        }];
+        return ipa;
     }
     return nil;
 }
@@ -142,7 +157,7 @@ marisa::Trie trie;
     NSMutableArray *mutableArray = [NSMutableArray new];
     for (NSString *word in original) {
         NSUInteger distance = [text mdc_levenshteinDistanceTo:word];
-        if (distance <= 3) { // Max edit distance: 3
+        if (distance <= 3) {
             [mutableArray addObject:@{@"w" : word, @"d" : @(distance)}];
         }
     }
@@ -164,7 +179,7 @@ marisa::Trie trie;
         NSArray *words = (self.phonexEncoded)[[self phonexEncode:buffer]];
         NSArray *wordsWithSimilarPhone = [self sortByDamerauLevenshteinDistance:words inputText:buffer];
         if (wordsWithSimilarPhone && wordsWithSimilarPhone.count > 0) {
-            NSUInteger range = 4; // 0~5
+            NSUInteger range = 4;
             NSMutableArray *finalResult = [NSMutableArray arrayWithArray:[self subarrayWithRang:result range:range]];
             [finalResult addObjectsFromArray:[self subarrayWithRang:wordsWithSimilarPhone range:range]];
             return finalResult;
@@ -190,8 +205,7 @@ marisa::Trie trie;
 
         NSMutableArray *filtered = [self wordsStartsWith:buffer];
         if (filtered && filtered.count > 0) {
-            NSArray *sorted = [self sortWordsByFrequency:filtered];
-            [result addObjectsFromArray:sorted];
+            [result addObjectsFromArray:filtered];
         } else {
             [result addObjectsFromArray:[self getSuggestionOfSpellChecker:buffer]];
         }
@@ -209,7 +223,6 @@ marisa::Trie trie;
 
     NSMutableArray *result2 = [[NSMutableArray alloc] init];
     for (NSString *word in result) {
-        // case sensitive input
         if ([word hasPrefix:buffer]) {
             [result2 addObject:[NSString stringWithFormat:@"%@%@", originalInput, [word substringFromIndex:originalInput.length]]];
         } else {

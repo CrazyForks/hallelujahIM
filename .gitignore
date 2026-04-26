@@ -47,3 +47,5 @@ Pods/Target Support Files/MDCDamerauLevenshtein/MDCDamerauLevenshtein.debug.xcco
 Pods/Target Support Files/MDCDamerauLevenshtein/MDCDamerauLevenshtein.release.xcconfig
 Pods/Pods.xcodeproj/xcuserdata/yuweidong.xcuserdatad/
 *.xcuserdatad
+*.sqlite3-shm
+*.sqlite3-wal
