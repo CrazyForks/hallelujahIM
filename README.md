@@ -113,7 +113,6 @@ GPL3(GNU GENERAL PUBLIC LICENSE Version 3)
    - 存储用户自定义的 Text-Expander 替换规则
    - 可在偏好设置页面 (http://localhost:62718) 中添加/删除
    - 安装和更新时保留（不会被覆盖）
-   - 首次启动时自动从 `~/.you_expand_me.json` 迁移旧数据
 
 ## 感谢以下开源项目:
 

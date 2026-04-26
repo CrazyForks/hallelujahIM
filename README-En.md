@@ -74,7 +74,6 @@ This input method uses two SQLite databases, queried via FMDB (SQLite wrapper):
    - Stores user-defined Text-Expander substitution rules
    - Manage via the preference page at http://localhost:62718
    - Preserved across installs/updates (not overwritten)
-   - Legacy `~/.you_expand_me.json` is auto-migrated on first launch
 
 ### Thanks to the following projects:
 

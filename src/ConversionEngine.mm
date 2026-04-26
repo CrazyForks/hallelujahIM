@@ -97,21 +97,6 @@ NSDictionary *deserializeJSON(NSString *path) {
     if (!_subDbQueue)
         return @{};
 
-    // migrate legacy JSON file to SQLite on first launch
-    NSString *jsonPath = [NSString stringWithFormat:@"%@/.you_expand_me.json", NSHomeDirectory()];
-    NSDictionary *legacy = deserializeJSON(jsonPath);
-    if (legacy && legacy.count > 0) {
-        [_subDbQueue inDatabase:^(FMDatabase *db) {
-            for (NSString *key in legacy) {
-                [db executeUpdate:@"INSERT OR IGNORE INTO substitutions (key, value) VALUES (?, ?)", key, legacy[key]];
-            }
-        }];
-        // rename the old file to prevent re-migration
-        NSString *backupPath = [jsonPath stringByAppendingString:@".backup"];
-        [[NSFileManager defaultManager] moveItemAtPath:jsonPath toPath:backupPath error:nil];
-        NSLog(@"[Hallelujah] Migrated substitutions from JSON to SQLite");
-    }
-
     __block NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     [_subDbQueue inDatabase:^(FMDatabase *db) {
         FMResultSet *rs = [db executeQuery:@"SELECT key, value FROM substitutions"];
