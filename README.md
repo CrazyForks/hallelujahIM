@@ -99,7 +99,18 @@ GPL3(GNU GENERAL PUBLIC LICENSE Version 3)
 
 ## 数据存储
 
-本输入法使用 SQLite 数据库存储英文单词词频、中文释义和国际音标，通过前缀匹配查询候选词。数据库包含约 140,402 个单词，基于 FMDB (SQLite wrapper) 进行查询。
+本输入法使用两个 SQLite 数据库，基于 FMDB (SQLite wrapper) 进行查询：
+
+1. **词库数据库**: `~/Library/Application Support/hallelujah/words_with_frequency_and_translation_and_ipa.sqlite3`
+   - 包含约 140,402 个英文单词的词频、中文释义和国际音标
+   - 安装时从 app bundle 自动复制到用户目录
+   - 通过前缀匹配查询候选词
+
+2. **自定义替换数据库**: `~/Library/Application Support/hallelujah/substitutions.sqlite3`
+   - 存储用户自定义的 Text-Expander 替换规则
+   - 可在偏好设置页面 (http://localhost:62718) 中添加/删除
+   - 安装和更新时保留（不会被覆盖）
+   - 首次启动时自动从 `~/.you_expand_me.json` 迁移旧数据
 
 ## 感谢以下开源项目:
 

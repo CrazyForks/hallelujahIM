@@ -63,7 +63,18 @@ GPL3(GNU GENERAL PUBLIC LICENSE Version 3)
 
 ## Data Storage
 
-This input method uses SQLite database to store English word frequency, Chinese translation, and IPA pronunciation. Candidate words are queried via prefix matching. The database contains approximately 140,402 words, queried using FMDB (SQLite wrapper).
+This input method uses two SQLite databases, queried via FMDB (SQLite wrapper):
+
+1. **Word database**: `~/Library/Application Support/hallelujah/words_with_frequency_and_translation_and_ipa.sqlite3`
+   - Contains ~140,402 English words with frequency, Chinese translation, and IPA
+   - Auto-copied from the app bundle during installation
+   - Used for prefix matching candidate queries
+
+2. **Substitutions database**: `~/Library/Application Support/hallelujah/substitutions.sqlite3`
+   - Stores user-defined Text-Expander substitution rules
+   - Manage via the preference page at http://localhost:62718
+   - Preserved across installs/updates (not overwritten)
+   - Legacy `~/.you_expand_me.json` is auto-migrated on first launch
 
 ### Thanks to the following projects:
 
