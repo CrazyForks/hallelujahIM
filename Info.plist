@@ -44,10 +44,10 @@
 	<key>TICapsLockLanguageSwitchCapable</key>
 	<true/>
 	<key>TISIntendedLanguage</key>
-    <string>zh-Hans</string>
+    <string>en</string>
 	<key>tsInputMethodCharacterRepertoireKey</key>
 	<array>
-		<string>zh-Hans</string>
+		<string>en</string>
 	</array>
 	<key>tsInputMethodIconFileKey</key>
 	<string>him.png</string>
