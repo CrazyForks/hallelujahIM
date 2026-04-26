@@ -2,10 +2,14 @@ var app = new Vue({
   el: "#app",
   data: {
     loading: false,
+    subLoading: false,
+    newKey: "",
+    newValue: "",
     preference: {
       showTranslation: true,
       commitWordWithSpace: true
-    }
+    },
+    substitutions: {}
   },
   methods: {
     getPreference() {
@@ -14,7 +18,6 @@ var app = new Vue({
           return res.json();
         })
         .then(preference => {
-          console.log(preference);
           this.preference = preference;
         });
     },
@@ -33,10 +36,52 @@ var app = new Vue({
         })
         .then(preference => {
           this.loading = false;
-          console.log(preference);
+        });
+    },
+    loadSubstitutions() {
+      fetch("http://localhost:62718/substitutions")
+        .then(function(res) {
+          return res.json();
+        })
+        .then(data => {
+          this.substitutions = data;
+        });
+    },
+    addSubstitution() {
+      if (!this.newKey || !this.newValue) return;
+      this.subLoading = true;
+      fetch("http://localhost:62718/substitutions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ key: this.newKey, value: this.newValue })
+      })
+        .then(function(res) {
+          return res.json();
+        })
+        .then(data => {
+          this.substitutions = data;
+          this.newKey = "";
+          this.newValue = "";
+          this.subLoading = false;
+        });
+    },
+    removeSubstitution(key) {
+      this.subLoading = true;
+      fetch("http://localhost:62718/substitutions/" + encodeURIComponent(key), {
+        method: "DELETE"
+      })
+        .then(function(res) {
+          return res.json();
+        })
+        .then(data => {
+          this.substitutions = data;
+          this.subLoading = false;
         });
     }
   }
 });
 
 app.getPreference();
+app.loadSubstitutions();

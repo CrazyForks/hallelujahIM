@@ -10,6 +10,7 @@ NSDictionary *deserializeJSON(NSString *path) {
 
 @implementation ConversionEngine {
     FMDatabaseQueue *_dbQueue;
+    FMDatabaseQueue *_subDbQueue;
 }
 
 + (instancetype)sharedEngine {
@@ -25,7 +26,8 @@ NSDictionary *deserializeJSON(NSString *path) {
 
 - (void)loadPreparedData {
     [self initDatabase];
-    self.substitutions = [self getUserDefinedSubstitutions];
+    [self initSubstitutionDatabase];
+    self.substitutions = [self loadSubstitutionsFromDB];
     self.pinyinDict = [self getPinyinData];
     self.phonexEncoded = [self getPhonexEncodedWords];
     self.phonexEncoder = [self getPhonexEncoder];
@@ -71,11 +73,6 @@ NSDictionary *deserializeJSON(NSString *path) {
     return deserializeJSON(path);
 }
 
-- (NSDictionary *)getUserDefinedSubstitutions {
-    NSString *path = [NSString stringWithFormat:@"%@%@", NSHomeDirectory(), @"/.you_expand_me.json"];
-    return deserializeJSON(path);
-}
-
 - (JSValue *)getPhonexEncoder {
     NSString *scriptPath = [[NSBundle mainBundle] pathForResource:@"phonex" ofType:@"js"];
     NSString *scriptString = [NSString stringWithContentsOfFile:scriptPath encoding:NSUTF8StringEncoding error:nil];
@@ -83,6 +80,74 @@ NSDictionary *deserializeJSON(NSString *path) {
     JSContext *context = [[JSContext alloc] init];
     [context evaluateScript:scriptString];
     return context[@"phonex"];
+}
+
+- (void)initSubstitutionDatabase {
+    NSString *supportDir = [NSString stringWithFormat:@"%@/Library/Application Support/hallelujah", NSHomeDirectory()];
+    [[NSFileManager defaultManager] createDirectoryAtPath:supportDir withIntermediateDirectories:YES attributes:nil error:nil];
+    NSString *dbPath = [supportDir stringByAppendingPathComponent:@"substitutions.sqlite3"];
+
+    _subDbQueue = [FMDatabaseQueue databaseQueueWithPath:dbPath];
+    [_subDbQueue inDatabase:^(FMDatabase *db) {
+        [db executeUpdate:@"CREATE TABLE IF NOT EXISTS substitutions (key TEXT PRIMARY KEY, value TEXT)"];
+    }];
+}
+
+- (NSDictionary *)loadSubstitutionsFromDB {
+    if (!_subDbQueue) return @{};
+
+    // migrate legacy JSON file to SQLite on first launch
+    NSString *jsonPath = [NSString stringWithFormat:@"%@/.you_expand_me.json", NSHomeDirectory()];
+    NSDictionary *legacy = deserializeJSON(jsonPath);
+    if (legacy && legacy.count > 0) {
+        [_subDbQueue inDatabase:^(FMDatabase *db) {
+            for (NSString *key in legacy) {
+                [db executeUpdate:@"INSERT OR IGNORE INTO substitutions (key, value) VALUES (?, ?)", key, legacy[key]];
+            }
+        }];
+        // rename the old file to prevent re-migration
+        NSString *backupPath = [jsonPath stringByAppendingString:@".backup"];
+        [[NSFileManager defaultManager] moveItemAtPath:jsonPath toPath:backupPath error:nil];
+        NSLog(@"[Hallelujah] Migrated substitutions from JSON to SQLite");
+    }
+
+    __block NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    [_subDbQueue inDatabase:^(FMDatabase *db) {
+        FMResultSet *rs = [db executeQuery:@"SELECT key, value FROM substitutions"];
+        while ([rs next]) {
+            dict[[rs stringForColumn:@"key"]] = [rs stringForColumn:@"value"];
+        }
+    }];
+    return [dict copy];
+}
+
+- (NSDictionary *)allSubstitutions {
+    if (!_subDbQueue) return @{};
+    __block NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    [_subDbQueue inDatabase:^(FMDatabase *db) {
+        FMResultSet *rs = [db executeQuery:@"SELECT key, value FROM substitutions"];
+        while ([rs next]) {
+            dict[[rs stringForColumn:@"key"]] = [rs stringForColumn:@"value"];
+        }
+    }];
+    return [dict copy];
+}
+
+- (void)addSubstitution:(NSString *)key value:(NSString *)value {
+    if (!_subDbQueue) return;
+    [_subDbQueue inDatabase:^(FMDatabase *db) {
+        [db executeUpdate:@"INSERT OR REPLACE INTO substitutions (key, value) VALUES (?, ?)", key, value];
+    }];
+    // refresh the cached dictionary
+    self.substitutions = [self loadSubstitutionsFromDB];
+}
+
+- (void)removeSubstitution:(NSString *)key {
+    if (!_subDbQueue) return;
+    [_subDbQueue inDatabase:^(FMDatabase *db) {
+        [db executeUpdate:@"DELETE FROM substitutions WHERE key = ?", key];
+    }];
+    self.substitutions = [self loadSubstitutionsFromDB];
 }
 
 - (NSMutableArray *)wordsStartsWith:(NSString *)prefix {

@@ -7,42 +7,37 @@
   </head>
   <body>
     <div id="app">
-      <form action="/" method="POST" v-on:submit.prevent="updatePreference()">
+      <h2>Preferences</h2>
+      <form v-on:submit.prevent="updatePreference()">
         <label>
           Show Translation:
-          <input
-            v-if="preference.showTranslation"
-            type="checkbox"
-            v-model="preference.showTranslation"
-            checked
-          />
-          <input
-            v-if="!preference.showTranslation"
-            type="checkbox"
-            v-model="preference.showTranslation"
-          />
+          <input type="checkbox" v-model="preference.showTranslation" />
         </label>
         <label>
           Commit word with space:
-          <input
-            v-if="preference.commitWordWithSpace"
-            type="checkbox"
-            v-model="preference.commitWordWithSpace"
-            checked
-          />
-          <input
-            v-if="!preference.commitWordWithSpace"
-            type="checkbox"
-            v-model="preference.commitWordWithSpace"
-          />
+          <input type="checkbox" v-model="preference.commitWordWithSpace" />
         </label>
-
-        <div class="form-footer">
-          <button :disabled="loading">
-            {{ loading ? "loading..." : "submit" }}
-          </button>
-        </div>
+        <button :disabled="loading">
+          {{ loading ? "loading..." : "Save" }}
+        </button>
       </form>
+
+      <h2>Substitutions</h2>
+      <p class="hint">Define shortcuts that expand into full text (e.g. "yem" → "you expand me")</p>
+      <form v-on:submit.prevent="addSubstitution()">
+        <input type="text" v-model="newKey" placeholder="shortcut" required />
+        <input type="text" v-model="newValue" placeholder="expansion" required />
+        <button :disabled="subLoading">Add</button>
+      </form>
+      <ul v-if="substitutions">
+        <li v-for="(value, key) in substitutions" :key="key">
+          <code>{{ key }}</code> → <code>{{ value }}</code>
+          <button class="del" @click="removeSubstitution(key)">×</button>
+        </li>
+      </ul>
+      <p v-if="substitutions && Object.keys(substitutions).length === 0" class="hint">
+        No substitutions defined.
+      </p>
     </div>
     <script src="./vue.js"></script>
     <script src="./index.js"></script>

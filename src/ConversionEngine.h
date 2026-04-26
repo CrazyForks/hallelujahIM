@@ -16,6 +16,10 @@
 - (NSArray *)getSuggestionOfSpellChecker:(NSString *)buffer;
 - (NSArray *)getCandidates:(NSString *)originalInput;
 
+- (NSDictionary *)allSubstitutions;
+- (void)addSubstitution:(NSString *)key value:(NSString *)value;
+- (void)removeSubstitution:(NSString *)key;
+
 @property NSDictionary *substitutions;
 @property NSDictionary *pinyinDict;
 @property NSDictionary *phonexEncoded;

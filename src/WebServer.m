@@ -1,9 +1,11 @@
 #import "WebServer.h"
+#import "ConversionEngine.h"
 #import "GCDWebServer.h"
 #import "GCDWebServerDataResponse.h"
 #import "GCDWebServerURLEncodedFormRequest.h"
 
 extern NSUserDefaults *preference;
+extern ConversionEngine *engine;
 
 NSString *TRANSLATION_KEY = @"showTranslation";
 NSString *COMMIT_WORD_WITH_SPACE_KEY = @"commitWordWithSpace";
@@ -62,6 +64,38 @@ static int port = 62718;
                           [preference setBool:commitWordWithSpace forKey:COMMIT_WORD_WITH_SPACE_KEY];
 
                           return [GCDWebServerDataResponse responseWithJSONObject:data];
+                      }];
+
+    [webServer addHandlerForMethod:@"GET"
+                              path:@"/substitutions"
+                      requestClass:[GCDWebServerRequest class]
+                      processBlock:^GCDWebServerResponse *(GCDWebServerRequest *request) {
+                          return [GCDWebServerDataResponse responseWithJSONObject:[engine allSubstitutions]];
+                      }];
+
+    [webServer addHandlerForMethod:@"POST"
+                              path:@"/substitutions"
+                      requestClass:[GCDWebServerDataRequest class]
+                      processBlock:^GCDWebServerResponse *(GCDWebServerRequest *request) {
+                          NSDictionary *data = ((GCDWebServerDataRequest *)request).jsonObject;
+                          NSString *key = data[@"key"];
+                          NSString *value = data[@"value"];
+                          if (key.length > 0 && value.length > 0) {
+                              [engine addSubstitution:key value:value];
+                          }
+                          return [GCDWebServerDataResponse responseWithJSONObject:[engine allSubstitutions]];
+                      }];
+
+    [webServer addHandlerForMethod:@"DELETE"
+                        pathRegex:@"/substitutions/(.+)"
+                      requestClass:[GCDWebServerRequest class]
+                      processBlock:^GCDWebServerResponse *(GCDWebServerRequest *request) {
+                          NSArray *captures = [request attributeForKey:GCDWebServerRequestAttribute_RegexCaptures];
+                          NSString *key = captures.firstObject;
+                          if (key.length > 0) {
+                              [engine removeSubstitution:key];
+                          }
+                          return [GCDWebServerDataResponse responseWithJSONObject:[engine allSubstitutions]];
                       }];
 
     NSMutableDictionary *options = [NSMutableDictionary dictionary];
