@@ -12,6 +12,6 @@
 
 - (void)setAnnotation:(NSString *)annotation;
 
-+ (AnnotationWinController*)sharedController;
++ (AnnotationWinController *)sharedController;
 
 @end

@@ -1,7 +1,7 @@
+#import "FMDB.h"
 #import <Cocoa/Cocoa.h>
 #import <JavaScriptCore/JavaScriptCore.h>
 #import <MDCDamerauLevenshtein/MDCDamerauLevenshtein.h>
-#import "FMDB.h"
 
 @interface ConversionEngine : NSObject
 

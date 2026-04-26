@@ -8,7 +8,6 @@ extern NSUserDefaults *preference;
 NSString *TRANSLATION_KEY = @"showTranslation";
 NSString *COMMIT_WORD_WITH_SPACE_KEY = @"commitWordWithSpace";
 
-
 @interface WebServer ()
 
 @property(nonatomic, strong) GCDWebServer *server;
@@ -44,12 +43,10 @@ static int port = 62718;
                               path:@"/preference"
                       requestClass:[GCDWebServerRequest class]
                       processBlock:^GCDWebServerResponse *(GCDWebServerRequest *request) {
-                          return [GCDWebServerDataResponse responseWithJSONObject:
-                                  @{
-                                    TRANSLATION_KEY : @([preference boolForKey:TRANSLATION_KEY]),
-                                    COMMIT_WORD_WITH_SPACE_KEY : @([preference boolForKey:COMMIT_WORD_WITH_SPACE_KEY])
-                                   }
-                                 ];
+                          return [GCDWebServerDataResponse responseWithJSONObject:@{
+                              TRANSLATION_KEY : @([preference boolForKey:TRANSLATION_KEY]),
+                              COMMIT_WORD_WITH_SPACE_KEY : @([preference boolForKey:COMMIT_WORD_WITH_SPACE_KEY])
+                          }];
                       }];
 
     [webServer addHandlerForMethod:@"POST"

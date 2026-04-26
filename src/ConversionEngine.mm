@@ -38,7 +38,8 @@ NSDictionary *deserializeJSON(NSString *path) {
     if (![[NSFileManager defaultManager] fileExistsAtPath:dbPath]) {
         NSString *sourcePath = [[NSBundle mainBundle] pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
         if (!sourcePath) {
-            sourcePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
+            sourcePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"words_with_frequency_and_translation_and_ipa"
+                                                                          ofType:@"sqlite3"];
         }
         if (!sourcePath) {
             NSLog(@"[Hallelujah] ERROR: words_with_frequency_and_translation_and_ipa.sqlite3 not found");
@@ -85,7 +86,8 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (NSMutableArray *)wordsStartsWith:(NSString *)prefix {
-    if (!_dbQueue) return [[NSMutableArray alloc] init];
+    if (!_dbQueue)
+        return [[NSMutableArray alloc] init];
     __block NSMutableArray *filtered = [[NSMutableArray alloc] init];
     NSString *lowerPrefix = [prefix lowercaseString];
     [_dbQueue inDatabase:^(FMDatabase *db) {
@@ -100,15 +102,17 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (NSArray *)sortWordsByFrequency:(NSArray *)filtered {
-    if (filtered.count == 0) return filtered;
-    if (!_dbQueue) return filtered;
+    if (filtered.count == 0)
+        return filtered;
+    if (!_dbQueue)
+        return filtered;
 
     NSMutableArray *placeholders = [NSMutableArray array];
     for (NSUInteger i = 0; i < filtered.count; i++) {
         [placeholders addObject:@"?"];
     }
     NSString *sql = [NSString stringWithFormat:@"SELECT word FROM words WHERE word IN (%@) ORDER BY frequency DESC",
-                     [placeholders componentsJoinedByString:@","]];
+                                               [placeholders componentsJoinedByString:@","]];
 
     __block NSArray *sorted;
     [_dbQueue inDatabase:^(FMDatabase *db) {
@@ -127,7 +131,8 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (NSArray *)getTranslations:(NSString *)word {
-    if (!_dbQueue) return @[];
+    if (!_dbQueue)
+        return @[];
     __block NSArray *translation = @[];
     [_dbQueue inDatabase:^(FMDatabase *db) {
         NSString *sql = @"SELECT translation FROM words WHERE word = ?";

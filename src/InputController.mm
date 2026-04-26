@@ -10,9 +10,10 @@ extern NSUserDefaults *preference;
 extern ConversionEngine *engine;
 
 typedef NSInteger KeyCode;
-static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC = 53, KEY_ARROW_DOWN = 125, KEY_ARROW_UP = 126, KEY_RIGHT_SHIFT = 60;
+static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC = 53, KEY_ARROW_DOWN = 125, KEY_ARROW_UP = 126,
+                     KEY_RIGHT_SHIFT = 60;
 
-@interface InputController()
+@interface InputController ()
 
 - (void)showIMEPreferences:(id)sender;
 - (void)clickAbout:(NSMenuItem *)sender;
@@ -354,7 +355,7 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
     [self reset];
 }
 
-- (NSMenu *)menu{
+- (NSMenu *)menu {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
     return [NSApp.delegate performSelector:NSSelectorFromString(@"menu")];
@@ -371,16 +372,18 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
 
 - (void)openUrl:(NSString *)url {
     NSWorkspace *ws = [NSWorkspace sharedWorkspace];
-    
+
     NSWorkspaceOpenConfiguration *configuration = [NSWorkspaceOpenConfiguration new];
     configuration.promptsUserIfNeeded = YES;
     configuration.createsNewApplicationInstance = NO;
-    
-    [ws openURL:[NSURL URLWithString:url] configuration:configuration completionHandler:^(NSRunningApplication * _Nullable app, NSError * _Nullable error) {
-        if (error) {
-          NSLog(@"Failed to run the app: %@", error.localizedDescription);
-        }
-    }];
+
+    [ws openURL:[NSURL URLWithString:url]
+            configuration:configuration
+        completionHandler:^(NSRunningApplication *_Nullable app, NSError *_Nullable error) {
+            if (error) {
+                NSLog(@"Failed to run the app: %@", error.localizedDescription);
+            }
+        }];
 }
 
 - (void)showAnnotation:(NSAttributedString *)candidateString {

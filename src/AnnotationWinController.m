@@ -11,7 +11,7 @@ static AnnotationWinController *sharedController;
 @synthesize view;
 @synthesize panel;
 
-+ (AnnotationWinController*)sharedController {
++ (AnnotationWinController *)sharedController {
     return sharedController;
 }
 
