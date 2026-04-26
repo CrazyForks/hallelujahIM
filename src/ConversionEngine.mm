@@ -32,20 +32,35 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (void)initDatabase {
+    NSFileManager *fm = [NSFileManager defaultManager];
+    NSString *supportDir = [NSString stringWithFormat:@"%@/Library/Application Support/hallelujah", NSHomeDirectory()];
+    [fm createDirectoryAtPath:supportDir withIntermediateDirectories:YES attributes:nil error:nil];
+
+    NSString *destPath = [supportDir stringByAppendingPathComponent:@"words_with_frequency_and_translation_and_ipa.sqlite3"];
     NSBundle *bundle = [NSBundle mainBundle];
-    NSString *dbPath = [bundle pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
-    if (!dbPath) {
+    NSString *sourcePath = [bundle pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
+    if (!sourcePath) {
         bundle = [NSBundle bundleForClass:[self class]];
-        dbPath = [bundle pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
+        sourcePath = [bundle pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
     }
-    if (!dbPath) {
+    if (!sourcePath) {
         NSLog(@"[Hallelujah] ERROR: words_with_frequency_and_translation_and_ipa.sqlite3 not found in bundle");
         return;
     }
-    NSLog(@"[Hallelujah] Opening database at: %@", dbPath);
-    _dbQueue = [FMDatabaseQueue databaseQueueWithPath:dbPath];
+
+    if (![fm fileExistsAtPath:destPath]) {
+        NSError *error = nil;
+        [fm copyItemAtPath:sourcePath toPath:destPath error:&error];
+        if (error) {
+            NSLog(@"[Hallelujah] ERROR: Failed to copy database: %@", error.localizedDescription);
+            return;
+        }
+        NSLog(@"[Hallelujah] Copied database to: %@", destPath);
+    }
+
+    _dbQueue = [FMDatabaseQueue databaseQueueWithPath:destPath];
     if (!_dbQueue) {
-        NSLog(@"[Hallelujah] ERROR: Failed to open database at %@", dbPath);
+        NSLog(@"[Hallelujah] ERROR: Failed to open database at %@", destPath);
     }
 }
 
