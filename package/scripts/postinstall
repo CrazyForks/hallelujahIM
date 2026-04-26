@@ -13,10 +13,6 @@ pkill -9 hallelujah 2>/dev/null || true
 
 rm -rf "${USER_HOME}/Library/Input Methods/hallelujah.app/" 2>/dev/null || true
 
-# clear Text Input Source cache to force clean re-registration
-rm -f "${USER_HOME}/Library/Preferences/ByHost/com.apple.HIToolbox."*.plist 2>/dev/null || true
-rm -f "${USER_HOME}/Library/Preferences/com.apple.HIToolbox.plist" 2>/dev/null || true
-
 # copy sqlite database to writable user directory
 DB_DIR="${USER_HOME}/Library/Application Support/hallelujah"
 mkdir -p "${DB_DIR}"
