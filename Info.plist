@@ -47,7 +47,7 @@
     <string>en</string>
 	<key>tsInputMethodCharacterRepertoireKey</key>
 	<array>
-		<string>en</string>
+		<string>Latn</string>
 	</array>
 	<key>tsInputMethodIconFileKey</key>
 	<string>him.png</string>
