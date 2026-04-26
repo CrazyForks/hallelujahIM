@@ -48,9 +48,9 @@ Inspired by [hallelujah_autocompletion](https://daringfireball.net/2006/10/halle
 click `Preferences...` or visit web ui: http://localhost:62718/index.html
 ![preference](https://github.com/dongyuwei/hallelujahIM/blob/master/snapshots/preference.png)
 
-setup:<br/>
-![setup](https://github.com/dongyuwei/NumberInput_IMKit_Sample/blob/master/object-c/hallelujahIM/snapshots/setup.png?raw=true)
-![preference options](https://github.com/dongyuwei/hallelujahIM/blob/master/snapshots/web-preference.png?raw=true)
+preferences config:<br/>
+<img width="724" height="496" alt="image" src="https://github.com/user-attachments/assets/74e9f7a3-3287-43e5-92f2-08105dc1b461" />
+
 
 ## Build project
 
