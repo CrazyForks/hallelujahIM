@@ -4,6 +4,13 @@ pkill -9 hallelujah && rm -rf ~/Library/Input\ Methods/hallelujah.app/
 
 login_user=`/usr/bin/stat -f%Su /dev/console`
 
+# copy sqlite database to writable user directory
+USER_HOME=$(eval echo ~${login_user})
+DB_DIR="${USER_HOME}/Library/Application Support/hallelujah"
+mkdir -p "${DB_DIR}"
+cp "/Library/Input Methods/hallelujah.app/Contents/Resources/words_with_frequency_and_translation_and_ipa.sqlite3" "${DB_DIR}/"
+chown -R "${login_user}" "${DB_DIR}"
+
 /usr/bin/sudo -u "${login_user}" "/Library/Input Methods/hallelujah.app/Contents/MacOS/hallelujah" --install
 
 # refresh the preferences cache

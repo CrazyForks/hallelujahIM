@@ -32,35 +32,31 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (void)initDatabase {
-    NSFileManager *fm = [NSFileManager defaultManager];
     NSString *supportDir = [NSString stringWithFormat:@"%@/Library/Application Support/hallelujah", NSHomeDirectory()];
-    [fm createDirectoryAtPath:supportDir withIntermediateDirectories:YES attributes:nil error:nil];
+    NSString *dbPath = [supportDir stringByAppendingPathComponent:@"words_with_frequency_and_translation_and_ipa.sqlite3"];
 
-    NSString *destPath = [supportDir stringByAppendingPathComponent:@"words_with_frequency_and_translation_and_ipa.sqlite3"];
-    NSBundle *bundle = [NSBundle mainBundle];
-    NSString *sourcePath = [bundle pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
-    if (!sourcePath) {
-        bundle = [NSBundle bundleForClass:[self class]];
-        sourcePath = [bundle pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
-    }
-    if (!sourcePath) {
-        NSLog(@"[Hallelujah] ERROR: words_with_frequency_and_translation_and_ipa.sqlite3 not found in bundle");
-        return;
-    }
-
-    if (![fm fileExistsAtPath:destPath]) {
+    if (![[NSFileManager defaultManager] fileExistsAtPath:dbPath]) {
+        NSString *sourcePath = [[NSBundle mainBundle] pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
+        if (!sourcePath) {
+            sourcePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"words_with_frequency_and_translation_and_ipa" ofType:@"sqlite3"];
+        }
+        if (!sourcePath) {
+            NSLog(@"[Hallelujah] ERROR: words_with_frequency_and_translation_and_ipa.sqlite3 not found");
+            return;
+        }
+        [[NSFileManager defaultManager] createDirectoryAtPath:supportDir withIntermediateDirectories:YES attributes:nil error:nil];
         NSError *error = nil;
-        [fm copyItemAtPath:sourcePath toPath:destPath error:&error];
+        [[NSFileManager defaultManager] copyItemAtPath:sourcePath toPath:dbPath error:&error];
         if (error) {
             NSLog(@"[Hallelujah] ERROR: Failed to copy database: %@", error.localizedDescription);
             return;
         }
-        NSLog(@"[Hallelujah] Copied database to: %@", destPath);
+        NSLog(@"[Hallelujah] Copied database to user directory: %@", dbPath);
     }
 
-    _dbQueue = [FMDatabaseQueue databaseQueueWithPath:destPath];
+    _dbQueue = [FMDatabaseQueue databaseQueueWithPath:dbPath];
     if (!_dbQueue) {
-        NSLog(@"[Hallelujah] ERROR: Failed to open database at %@", destPath);
+        NSLog(@"[Hallelujah] ERROR: Failed to open database at %@", dbPath);
     }
 }
 
