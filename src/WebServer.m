@@ -87,7 +87,7 @@ static int port = 62718;
                       }];
 
     [webServer addHandlerForMethod:@"DELETE"
-                        pathRegex:@"/substitutions/(.+)"
+                         pathRegex:@"/substitutions/(.+)"
                       requestClass:[GCDWebServerRequest class]
                       processBlock:^GCDWebServerResponse *(GCDWebServerRequest *request) {
                           NSArray *captures = [request attributeForKey:GCDWebServerRequestAttribute_RegexCaptures];

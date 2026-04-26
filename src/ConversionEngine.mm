@@ -94,7 +94,8 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (NSDictionary *)loadSubstitutionsFromDB {
-    if (!_subDbQueue) return @{};
+    if (!_subDbQueue)
+        return @{};
 
     // migrate legacy JSON file to SQLite on first launch
     NSString *jsonPath = [NSString stringWithFormat:@"%@/.you_expand_me.json", NSHomeDirectory()];
@@ -122,7 +123,8 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (NSDictionary *)allSubstitutions {
-    if (!_subDbQueue) return @{};
+    if (!_subDbQueue)
+        return @{};
     __block NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     [_subDbQueue inDatabase:^(FMDatabase *db) {
         FMResultSet *rs = [db executeQuery:@"SELECT key, value FROM substitutions"];
@@ -134,7 +136,8 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (void)addSubstitution:(NSString *)key value:(NSString *)value {
-    if (!_subDbQueue) return;
+    if (!_subDbQueue)
+        return;
     [_subDbQueue inDatabase:^(FMDatabase *db) {
         [db executeUpdate:@"INSERT OR REPLACE INTO substitutions (key, value) VALUES (?, ?)", key, value];
     }];
@@ -143,7 +146,8 @@ NSDictionary *deserializeJSON(NSString *path) {
 }
 
 - (void)removeSubstitution:(NSString *)key {
-    if (!_subDbQueue) return;
+    if (!_subDbQueue)
+        return;
     [_subDbQueue inDatabase:^(FMDatabase *db) {
         [db executeUpdate:@"DELETE FROM substitutions WHERE key = ?", key];
     }];
