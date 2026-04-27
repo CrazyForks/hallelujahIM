@@ -4,7 +4,7 @@ login_user=`/usr/bin/stat -f%Su /dev/console`
 login_uid=`/usr/bin/id -u "${login_user}"`
 USER_HOME=$(eval echo ~${login_user})
 
-# stop any running instance (don't pre-deactivate the freshly-installed bundle)
+# stop any running instance
 pkill -9 hallelujah 2>/dev/null || true
 sleep 1
 pkill -9 hallelujah 2>/dev/null || true
@@ -18,8 +18,21 @@ mkdir -p "${DB_DIR}"
 cp "/Library/Input Methods/hallelujah.app/Contents/Resources/words_with_frequency_and_translation_and_ipa.sqlite3" "${DB_DIR}/"
 chown -R "${login_user}" "${DB_DIR}"
 
-# refresh the user's prefs cache BEFORE registering so HIToolbox sees a clean state
+# refresh the user's prefs cache BEFORE touching TIS so HIToolbox sees a
+# clean state and any stale source entries can be re-evaluated.
 launchctl asuser "${login_uid}" sudo -u "${login_user}" killall -HUP cfprefsd 2>/dev/null || true
+
+# Deactivate any existing entries with our source ID first (deselect+disable).
+# This scrubs stale registrations left behind when a previous install was
+# removed by deleting the .app bundle manually -- without this, reinstalling
+# leaves duplicate entries in the system Input Sources menu.
+# Must run inside the user's Aqua launchd session for TIS changes to persist.
+launchctl asuser "${login_uid}" sudo -u "${login_user}" \
+    "/Library/Input Methods/hallelujah.app/Contents/MacOS/hallelujah" --deactivate 2>/dev/null || true
+
+# Let HIToolbox flush the deactivation before we re-register.
+launchctl asuser "${login_uid}" sudo -u "${login_user}" killall -HUP cfprefsd 2>/dev/null || true
+sleep 1
 
 # register + enable + select inside the user's Aqua launchd session
 # (plain `sudo -u` runs outside the user's GUI session and TIS changes don't
