@@ -1,16 +1,15 @@
 #!/bin/bash
 
 login_user=`/usr/bin/stat -f%Su /dev/console`
+login_uid=`/usr/bin/id -u "${login_user}"`
 USER_HOME=$(eval echo ~${login_user})
 
-# deactivate input source to prevent auto-restart on kill
-/usr/bin/sudo -u "${login_user}" "/Library/Input Methods/hallelujah.app/Contents/MacOS/hallelujah" --deactivate 2>/dev/null || true
-
-# kill old process (won't auto-restart since deselected)
+# stop any running instance (don't pre-deactivate the freshly-installed bundle)
 pkill -9 hallelujah 2>/dev/null || true
 sleep 1
 pkill -9 hallelujah 2>/dev/null || true
 
+# remove stale per-user copy
 rm -rf "${USER_HOME}/Library/Input Methods/hallelujah.app/" 2>/dev/null || true
 
 # copy sqlite database to writable user directory
@@ -19,10 +18,16 @@ mkdir -p "${DB_DIR}"
 cp "/Library/Input Methods/hallelujah.app/Contents/Resources/words_with_frequency_and_translation_and_ipa.sqlite3" "${DB_DIR}/"
 chown -R "${login_user}" "${DB_DIR}"
 
-# register and activate the new input source
-/usr/bin/sudo -u "${login_user}" "/Library/Input Methods/hallelujah.app/Contents/MacOS/hallelujah" --install
+# refresh the user's prefs cache BEFORE registering so HIToolbox sees a clean state
+launchctl asuser "${login_uid}" sudo -u "${login_user}" killall -HUP cfprefsd 2>/dev/null || true
 
-# refresh the preferences cache for the login user
-/usr/bin/sudo -u "${login_user}" killall -HUP cfprefsd 2>/dev/null || true
+# register + enable + select inside the user's Aqua launchd session
+# (plain `sudo -u` runs outside the user's GUI session and TIS changes don't
+# persist correctly there, which leaves the IME in a half-registered state)
+launchctl asuser "${login_uid}" sudo -u "${login_user}" \
+    "/Library/Input Methods/hallelujah.app/Contents/MacOS/hallelujah" --install
+
+# refresh again so System Settings reflects the new enabled/selected state
+launchctl asuser "${login_uid}" sudo -u "${login_user}" killall -HUP cfprefsd 2>/dev/null || true
 
 echo "hallelujah input method registered and activated successfully" > /tmp/hallelujah-postinstall

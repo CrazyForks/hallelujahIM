@@ -29,13 +29,12 @@ void activateInputSource() {
         TISInputSourceRef inputSource = (TISInputSourceRef)(CFArrayGetValueAtIndex(sourceList, i));
         NSString *sourceID = (__bridge NSString *)(TISGetInputSourceProperty(inputSource, kTISPropertyInputSourceID));
         if ([sourceID isEqualToString:kSourceID]) {
-            CFBooleanRef isEnabled = (CFBooleanRef)TISGetInputSourceProperty(inputSource, kTISPropertyInputSourceIsEnabled);
-            if (!isEnabled || !CFBooleanGetValue(isEnabled)) {
-                TISEnableInputSource(inputSource);
-                NSLog(@"Added and enabled input source: %@", sourceID);
-            }
+            // Always enable first; safe to call even if already enabled.
+            TISEnableInputSource(inputSource);
+            NSLog(@"Enabled input source: %@", sourceID);
+
             CFBooleanRef isSelectable = (CFBooleanRef)TISGetInputSourceProperty(inputSource, kTISPropertyInputSourceIsSelectCapable);
-            if (CFBooleanGetValue(isSelectable)) {
+            if (isSelectable && CFBooleanGetValue(isSelectable)) {
                 TISSelectInputSource(inputSource);
                 NSLog(@"Selected input source: %@", sourceID);
             }
@@ -72,7 +71,9 @@ int main(int argc, char *argv[]) {
 
     if (argc > 1 && !strcmp("--install", argv[1])) {
         registerInputSource();
-        deactivateInputSource();
+        // Give HIToolbox a moment to pick up the freshly-registered bundle
+        // before we try to enable/select it.
+        [NSThread sleepForTimeInterval:0.5];
         activateInputSource();
         return 0;
     }
