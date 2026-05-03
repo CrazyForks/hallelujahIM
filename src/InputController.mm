@@ -9,6 +9,8 @@ extern IMKCandidates *sharedCandidates;
 extern NSUserDefaults *preference;
 extern ConversionEngine *engine;
 
+#define MAX_RECENT_WORDS 4
+
 typedef NSInteger KeyCode;
 static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC = 53, KEY_ARROW_DOWN = 125, KEY_ARROW_UP = 126,
                      KEY_RIGHT_SHIFT = 60;
@@ -47,6 +49,7 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
                     [self cancelComposition];
                     [self commitComposition:sender];
                 }
+                [self resetContext];
             }
         }
         break;
@@ -116,6 +119,7 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
         [self cancelComposition];
         [sender insertText:@""];
         [self reset];
+        [self resetContext];
         return YES;
     }
 
@@ -216,6 +220,9 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
     if (text == nil || text.length == 0) {
         text = [self originalBuffer];
     }
+
+    [self recordCommittedWord:text];
+
     BOOL commitWordWithSpace = [preference boolForKey:@"commitWordWithSpace"];
 
     if (commitWordWithSpace && text.length > 0) {
@@ -238,6 +245,8 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
         text = [self originalBuffer];
     }
 
+    [self recordCommittedWord:text];
+
     [sender insertText:text replacementRange:NSMakeRange(NSNotFound, NSNotFound)];
 
     [self reset];
@@ -254,6 +263,38 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
     [sharedCandidates setCandidateData:@[]];
     [_annotationWin setAnnotation:@""];
     [_annotationWin hideWindow];
+}
+
+- (void)resetContext {
+    [_recentWords removeAllObjects];
+}
+
+- (NSString *)recentContext {
+    if (_recentWords.count == 0)
+        return nil;
+    return [_recentWords componentsJoinedByString:@" "];
+}
+
+- (void)recordCommittedWord:(NSString *)word {
+    if (!word || word.length == 0)
+        return;
+    // Only record alphabetic words
+    NSString *trimmed = [word stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    trimmed = [trimmed stringByTrimmingCharactersInSet:[NSCharacterSet punctuationCharacterSet]];
+    if (trimmed.length == 0)
+        return;
+
+    // Check if word is purely alphabetic
+    NSCharacterSet *letters = [NSCharacterSet letterCharacterSet];
+    for (NSInteger i = 0; i < (NSInteger)trimmed.length; i++) {
+        if (![letters characterIsMember:[trimmed characterAtIndex:i]])
+            return;
+    }
+
+    [_recentWords addObject:trimmed.lowercaseString];
+    while (_recentWords.count > MAX_RECENT_WORDS) {
+        [_recentWords removeObjectAtIndex:0];
+    }
 }
 
 - (NSMutableString *)composedBuffer {
@@ -313,6 +354,23 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
 - (NSArray *)candidates:(id)sender {
     NSString *originalInput = [self originalBuffer];
     NSArray *candidateList = [engine getCandidates:originalInput];
+
+    // Blend n-gram predictions based on recent context
+    NSString *ctx = [self recentContext];
+    if (ctx && originalInput.length > 0) {
+        NSArray *predictions = [engine predictNextWordsForContext:ctx prefixFilter:originalInput maxResults:5];
+        if (predictions.count > 0) {
+            NSMutableArray *blended = [NSMutableArray arrayWithArray:predictions];
+            for (NSString *word in candidateList) {
+                if (![blended containsObject:word]) {
+                    [blended addObject:word];
+                }
+            }
+            _candidates = [NSMutableArray arrayWithArray:blended];
+            return blended;
+        }
+    }
+
     _candidates = [NSMutableArray arrayWithArray:candidateList];
     return candidateList;
 }
@@ -349,10 +407,12 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
 
     _currentCandidateIndex = 1;
     _candidates = [[NSMutableArray alloc] init];
+    _recentWords = [[NSMutableArray alloc] init];
 }
 
 - (void)deactivateServer:(id)sender {
     [self reset];
+    [self resetContext];
 }
 
 - (NSMenu *)menu {

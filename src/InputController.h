@@ -15,6 +15,7 @@
     NSUInteger _lastModifiers[2];
     NSEventType _lastEventTypes[2];
     AnnotationWinController *_annotationWin;
+    NSMutableArray<NSString *> *_recentWords;
 }
 
 - (NSMutableString *)composedBuffer;
@@ -22,5 +23,8 @@
 - (NSMutableString *)originalBuffer;
 - (void)originalBufferAppend:(NSString *)string client:(id)sender;
 - (void)setOriginalBuffer:(NSString *)string;
+- (NSString *)recentContext;
+- (void)recordCommittedWord:(NSString *)word;
+- (void)resetContext;
 
 @end

@@ -15,6 +15,7 @@ hallelujahIM is an english input method with auto-suggestions and spell check fe
 5. Pinyin to English: you can input Hanyu Pinyin and receive the matching English word.
 6. Fuzzy phonetic match is another feature. For example, you can input `cerrage` or `kerrage` to get `courage`, and `aosome` or `ausome` to get `awesome`.
 7. You can switch to the default English input mode (the normal, quiet, or silent mode) by pressing the **right shift** key. Pressing shift again will switch back to the auto-suggestion mode.
+8. **Next-Word Prediction**: Based on Google Books Ngram Corpus (2010-2019) English n-gram frequency data, the input method predicts the next word as you type. For example, after typing "i do not", it prioritizes suggestions like "know", "think", and "want".
 
 # download and install
 
@@ -67,13 +68,50 @@ This input method uses two SQLite databases, queried via FMDB (SQLite wrapper):
 
 1. **Word database**: `~/Library/Application Support/hallelujah/words_with_frequency_and_translation_and_ipa.sqlite3`
    - Contains ~140,402 English words with frequency, Chinese translation, and IPA
+   - Contains ~9,955 English n-gram (2-5 word phrase) frequency entries for next-word prediction
    - Auto-copied from the app bundle during installation
    - Used for prefix matching candidate queries
+
+   Schema:
+
+   ```sql
+   -- Words table: stores English words, frequency, Chinese translation, and IPA
+   CREATE TABLE words (
+       word TEXT PRIMARY KEY,
+       frequency INT,
+       translation TEXT,
+       ipa TEXT
+   );
+   CREATE INDEX idx_word ON words(word);
+
+   -- N-grams table: stores 2-5 word phrase frequencies for next-word prediction
+   -- n: phrase length (2-5)
+   -- context: all words except the last (e.g., "i do not")
+   -- next_word: the last word, i.e., the predicted word (e.g., "know")
+   -- frequency: occurrence count in the Google Books corpus
+   CREATE TABLE ngrams (
+       n INTEGER NOT NULL,
+       context TEXT NOT NULL,
+       next_word TEXT NOT NULL,
+       frequency INTEGER NOT NULL,
+       PRIMARY KEY (n, context, next_word)
+   );
+   CREATE INDEX idx_ngrams_context ON ngrams(n, context);
+   ```
 
 2. **Substitutions database**: `~/Library/Application Support/hallelujah/substitutions.sqlite3`
    - Stores user-defined Text-Expander substitution rules
    - Manage via the preference page at http://localhost:62718
    - Preserved across installs/updates (not overwritten)
+
+   Schema:
+
+   ```sql
+   CREATE TABLE substitutions (
+       key TEXT PRIMARY KEY,
+       value TEXT
+   );
+   ```
 
 ### Thanks to the following projects:
 
@@ -83,7 +121,8 @@ This input method uses two SQLite databases, queried via FMDB (SQLite wrapper):
 4. [GCDWebServer](https://github.com/swisspol/GCDWebServer)
 5. [talisman](https://github.com/Yomguithereal/talisman), using its phonex algorithm to implement fuzzy phonics match.
 6. [MDCDamerauLevenshtein](https://github.com/modocache/MDCDamerauLevenshtein), using it to calculate the edit distance.
-7. [squirrel](https://github.com/rime/squirrel), I shamelessly copied the script to install and build pkg App for Mac.
+7. [Google Books Ngram Corpus](https://github.com/nicolas-ivanov/google-books-ngram-frequency), providing English n-gram (2-5 word phrase) frequency data for next-word prediction.
+8. [squirrel](https://github.com/rime/squirrel), I shamelessly copied the script to install and build pkg App for Mac.
 
 ### snapshots
 
