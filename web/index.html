@@ -17,6 +17,10 @@
           Commit word with space:
           <input type="checkbox" v-model="preference.commitWordWithSpace" />
         </label>
+        <label>
+          Next-Word Prediction (ngram):
+          <input type="checkbox" v-model="preference.enableNextWordPrediction" />
+        </label>
         <button :disabled="loading">
           {{ loading ? "loading..." : "Save" }}
         </button>

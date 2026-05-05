@@ -356,8 +356,9 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
     NSArray *candidateList = [engine getCandidates:originalInput];
 
     // Blend n-gram predictions based on recent context
+    BOOL enableNextWordPrediction = [preference boolForKey:@"enableNextWordPrediction"];
     NSString *ctx = [self recentContext];
-    if (ctx && originalInput.length > 0) {
+    if (enableNextWordPrediction && ctx && originalInput.length > 0) {
         NSArray *predictions = [engine predictNextWordsForContext:ctx prefixFilter:originalInput maxResults:5];
         if (predictions.count > 0) {
             NSMutableArray *blended = [NSMutableArray arrayWithArray:predictions];
