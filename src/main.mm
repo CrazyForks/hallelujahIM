@@ -59,7 +59,7 @@ void deactivateInputSource() {
 
 void initPreference() {
     preference = [NSUserDefaults standardUserDefaults];
-    NSDictionary *defaultPrefs = @{@"commitWordWithSpace" : @YES, @"showTranslation" : @YES, @"enableNextWordPrediction" : @YES};
+    NSDictionary *defaultPrefs = @{@"commitWordWithSpace" : @YES, @"showTranslation" : @YES, @"enableNextWordPrediction" : @NO};
     [preference registerDefaults:defaultPrefs];
 }
 

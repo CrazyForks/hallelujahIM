@@ -19,7 +19,7 @@
 6. 支持按英文单词的模糊音来输入。 如输入 `cerrage` 或者 `kerrage` 可以得到 `courage` 候选词，也可以输入 `aosome` 或者 `ausome` 来得到 `awesome` 候选词。
 7. 按键盘右侧`shift` 键可以在智能英语输入模式与传统英语输入模式间切换。
 8. 选词方式：数字键 1~9 及 `Enter` 回车键和 `Space` 空格键均可选词提交。`Space` 空格键选词默认会自动附加一个空格在单词后面，可以在配置页面关闭自动附加空格功能。`Enter` 回车键选词则不会附加空格。
-9. **上下文预测(Next-Word Prediction)**：基于 Google Books Ngram Corpus (2010-2019) 英语语料库的 n-gram 频率数据，在用户输入时根据前文预测下一个单词。例如输入"i do not"后，输入法会优先推荐"know"、"think"、"want"等高频后续词。
+9. **上下文预测(Next-Word Prediction)**：基于 Google Books Ngram Corpus (2010-2019) 英语语料库的 n-gram 频率数据，在用户输入时根据前文预测下一个单词。例如输入"i do not"后，输入法会优先推荐"know"、"think"、"want"等高频后续词。目前默认关闭这个功能，需要在输入法配置中手动打开。
 
 # 下载与安装
 

@@ -15,7 +15,7 @@ hallelujahIM is an english input method with auto-suggestions and spell check fe
 5. Pinyin to English: you can input Hanyu Pinyin and receive the matching English word.
 6. Fuzzy phonetic match is another feature. For example, you can input `cerrage` or `kerrage` to get `courage`, and `aosome` or `ausome` to get `awesome`.
 7. You can switch to the default English input mode (the normal, quiet, or silent mode) by pressing the **right shift** key. Pressing shift again will switch back to the auto-suggestion mode.
-8. **Next-Word Prediction**: Based on Google Books Ngram Corpus (2010-2019) English n-gram frequency data, the input method predicts the next word as you type. For example, after typing "i do not", it prioritizes suggestions like "know", "think", and "want".
+8. **Next-Word Prediction**: Based on Google Books Ngram Corpus (2010-2019) English n-gram frequency data, the input method predicts the next word as you type. For example, after typing "i do not", it prioritizes suggestions like "know", "think", and "want". This feature is default off, need to turn on it in IME preference config.
 
 # download and install
 

@@ -8,7 +8,7 @@ var app = new Vue({
     preference: {
       showTranslation: true,
       commitWordWithSpace: true,
-      enableNextWordPrediction: true
+      enableNextWordPrediction: false
     },
     substitutions: {}
   },
