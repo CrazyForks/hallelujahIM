@@ -262,7 +262,7 @@
     NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@"zhongguo"];
     XCTAssertTrue(results.count >= 5);
     XCTAssertTrue([[results objectAtIndex:0] isEqualToString:@"中国"]);
-    XCTAssertTrue([[results objectAtIndex:1] isEqualToString:@"中国人"]);
+    XCTAssertTrue([results containsObject:@"中国人"]);
 }
 
 - (void)testFetchHanZiByPinyinAbbreviationFirstResult {
@@ -304,6 +304,24 @@
     NSArray *lower = [self.engine fetchHanZiByPinyinWithPrefix:@"nihao"];
     NSArray *upper = [self.engine fetchHanZiByPinyinWithPrefix:@"NIHao"];
     XCTAssertEqualObjects(lower, upper);
+}
+
+- (void)testFetchHanZiByPinyinSingleSyllableYu {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@"yu"];
+    XCTAssertTrue(results.count >= 5);
+    // Exact py='yu' matches should rank above prefix matches like yue/yuan/yun
+    XCTAssertTrue([[results objectAtIndex:0] isEqualToString:@"与"]);
+    XCTAssertTrue([[results objectAtIndex:1] isEqualToString:@"于"]);
+    XCTAssertTrue([results containsObject:@"玉"]);
+}
+
+- (void)testFetchHanZiByPinyinSingleSyllableWei {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@"wei"];
+    XCTAssertTrue(results.count >= 5);
+    // Exact py='wei' matches should rank above prefix matches like weishenme/weizhi
+    XCTAssertTrue([[results objectAtIndex:0] isEqualToString:@"为"]);
+    XCTAssertTrue([[results objectAtIndex:1] isEqualToString:@"未"]);
+    XCTAssertTrue([results containsObject:@"伟"]);
 }
 
 @end

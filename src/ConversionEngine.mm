@@ -385,9 +385,10 @@ NSDictionary *deserializeJSON(NSString *path) {
     __block NSMutableArray *results = [NSMutableArray array];
 
     [_pyDbQueue inDatabase:^(FMDatabase *db) {
-        NSString *sql = @"SELECT hz FROM pinyin_data WHERE py LIKE ? OR abbr LIKE ? ORDER BY freq DESC LIMIT 20";
+        NSString *sql = @"SELECT hz FROM pinyin_data WHERE py LIKE ? OR abbr LIKE ? "
+                        @"ORDER BY CASE WHEN py = ? OR abbr = ? THEN 0 ELSE 1 END, freq DESC LIMIT 20";
         NSString *pattern = [NSString stringWithFormat:@"%@%%", lowerPrefix];
-        FMResultSet *rs = [db executeQuery:sql, pattern, pattern];
+        FMResultSet *rs = [db executeQuery:sql, pattern, pattern, lowerPrefix, lowerPrefix];
         while ([rs next]) {
             NSString *hz = [rs stringForColumn:@"hz"];
             if (hz && hz.length > 0 && ![results containsObject:hz]) {
