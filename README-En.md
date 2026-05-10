@@ -16,6 +16,7 @@ hallelujahIM is an english input method with auto-suggestions and spell check fe
 6. Fuzzy phonetic match is another feature. For example, you can input `cerrage` or `kerrage` to get `courage`, and `aosome` or `ausome` to get `awesome`.
 7. You can switch to the default English input mode (the normal, quiet, or silent mode) by pressing the **right shift** key. Pressing shift again will switch back to the auto-suggestion mode.
 8. **Next-Word Prediction**: Based on Google Books Ngram Corpus (2010-2019) English n-gram frequency data, the input method predicts the next word as you type. For example, after typing "i do not", it prioritizes suggestions like "know", "think", and "want". This feature is default off, need to turn on it in IME preference config.
+9. **Pinyin to Chinese**: Press the right `Command` key to switch to Pinyin input mode. Type Chinese pinyin (or initial letters) and get Chinese hanzi candidates. For example, typing `niha` or the abbreviation `nh` will show "你好" and "你还". Press right `Command` again to switch back to intelligent English input mode.
 
 # download and install
 
@@ -66,7 +67,7 @@ GPL3(GNU GENERAL PUBLIC LICENSE Version 3)
 
 This input method uses two SQLite databases, queried via FMDB (SQLite wrapper):
 
-1. **Word database**: `~/Library/Application Support/hallelujah/words_with_frequency_and_translation_and_ipa.sqlite3`
+1. **English word database**: `~/Library/Application Support/hallelujah/words_with_frequency_and_translation_and_ipa.sqlite3`
    - Contains ~140,402 English words with frequency, Chinese translation, and IPA
    - Contains ~9,955 English n-gram (2-5 word phrase) frequency entries for next-word prediction
    - Auto-copied from the app bundle during installation
@@ -99,7 +100,28 @@ This input method uses two SQLite databases, queried via FMDB (SQLite wrapper):
    CREATE INDEX idx_ngrams_context ON ngrams(n, context);
    ```
 
-2. **Substitutions database**: `~/Library/Application Support/hallelujah/substitutions.sqlite3`
+2. **Pinyin database**: `~/Library/Application Support/hallelujah/pinyin_data.sqlite3`
+   - Contains ~55,320 pinyin→hanzi mappings based on the Google Pinyin dictionary
+   - Switch to pinyin mode via right Command key
+   - Supports both full pinyin and initial-letter abbreviations
+   - Results ranked by frequency
+   - Auto-copied from the app bundle during install
+
+   Schema:
+
+   ```sql
+   CREATE TABLE pinyin_data (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       hz TEXT NOT NULL,      -- Chinese hanzi
+       py TEXT NOT NULL,      -- Full pinyin
+       abbr TEXT NOT NULL,    -- Pinyin initial abbreviation
+       freq REAL NOT NULL     -- Frequency score
+   );
+   CREATE INDEX idx_pinyin ON pinyin_data(py);
+   CREATE INDEX idx_abbr ON pinyin_data(abbr);
+   ```
+
+3. **Substitutions database**: `~/Library/Application Support/hallelujah/substitutions.sqlite3`
    - Stores user-defined Text-Expander substitution rules
    - Manage via the preference page at http://localhost:62718
    - Preserved across installs/updates (not overwritten)
@@ -117,7 +139,8 @@ This input method uses two SQLite databases, queried via FMDB (SQLite wrapper):
 
 1. [FMDB](https://github.com/ccgus/fmdb), SQLite wrapper for efficient prefix matching queries.
 2. dictionary/cedict.json is transformed from [cc-cedict](https://cc-cedict.org/wiki/)
-3. [cmudict](http://www.speech.cs.cmu.edu/cgi-bin/cmudict) and https://github.com/mphilli/English-to-IPA
+3. dictionary/pinyin_data.sqlite3 derived from Google Pinyin raw dict (65,105 entries), pinyin→hanzi mappings.
+4. [cmudict](http://www.speech.cs.cmu.edu/cgi-bin/cmudict) and https://github.com/mphilli/English-to-IPA
 4. [GCDWebServer](https://github.com/swisspol/GCDWebServer)
 5. [talisman](https://github.com/Yomguithereal/talisman), using its phonex algorithm to implement fuzzy phonics match.
 6. [MDCDamerauLevenshtein](https://github.com/modocache/MDCDamerauLevenshtein), using it to calculate the edit distance.

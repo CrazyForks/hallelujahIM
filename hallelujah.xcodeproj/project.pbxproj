@@ -29,6 +29,7 @@
 		8E90E6AE1DD558B60385D996 /* Pods_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4893615A9331202D81738ED2 /* Pods_Tests.framework */; };
 		DCF77A16FF93189F6E0F9759 /* Pods_hallelujah.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5FB0BF03D3169932092E2A73 /* Pods_hallelujah.framework */; };
 		E93074B70A5C264700470842 /* InputMethodKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E93074B60A5C264700470842 /* InputMethodKit.framework */; };
+		54F223488F57480B9C7F6FA2 /* pinyin_data.sqlite3 in Resources */ = {isa = PBXBuildFile; fileRef = 04176E6F301C43B4BEFC0BD0 /* pinyin_data.sqlite3 */; };
 		F102C5A61F487DE80005B03F /* words_with_frequency_and_translation_and_ipa.sqlite3 in Resources */ = {isa = PBXBuildFile; fileRef = F102C5A51F487DE80005B03F /* words_with_frequency_and_translation_and_ipa.sqlite3 */; };
 		F102C5AA1F4882C80005B03F /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = F102C5A91F4882C80005B03F /* main.mm */; };
 		F102C5AC1F4882D30005B03F /* InputController.mm in Sources */ = {isa = PBXBuildFile; fileRef = F102C5AB1F4882D30005B03F /* InputController.mm */; };
@@ -82,6 +83,7 @@
 		C821F631E5B6762735CA76CB /* Pods-hallelujah.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-hallelujah.release.xcconfig"; path = "Pods/Target Support Files/Pods-hallelujah/Pods-hallelujah.release.xcconfig"; sourceTree = "<group>"; };
 		C82BE1A7E1A45D2695354D87 /* Pods-Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Tests/Pods-Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		E93074B60A5C264700470842 /* InputMethodKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = InputMethodKit.framework; path = /System/Library/Frameworks/InputMethodKit.framework; sourceTree = "<absolute>"; };
+		04176E6F301C43B4BEFC0BD0 /* pinyin_data.sqlite3 */ = {isa = PBXFileReference; lastKnownFileType = file; name = pinyin_data.sqlite3; path = dictionary/pinyin_data.sqlite3; sourceTree = "<group>"; };
 		F102C5A51F487DE80005B03F /* words_with_frequency_and_translation_and_ipa.sqlite3 */ = {isa = PBXFileReference; lastKnownFileType = file; name = words_with_frequency_and_translation_and_ipa.sqlite3; path = dictionary/words_with_frequency_and_translation_and_ipa.sqlite3; sourceTree = "<group>"; };
 		F102C5A91F4882C80005B03F /* main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = main.mm; path = src/main.mm; sourceTree = "<group>"; };
 		F102C5AB1F4882D30005B03F /* InputController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = InputController.mm; path = src/InputController.mm; sourceTree = "<group>"; };
@@ -184,6 +186,7 @@
 				F1BF613B22D4DF6F003B946F /* AnnotationWindow.xib */,
 				3817857A22D0E2240091268E /* phonex.js */,
 				3802CD9922CF591100A7E2F9 /* phonex_encoded_words.json */,
+				04176E6F301C43B4BEFC0BD0 /* pinyin_data.sqlite3 */,
 				F102C5A51F487DE80005B03F /* words_with_frequency_and_translation_and_ipa.sqlite3 */,
 				38DD40191F5800A400A276CB /* PreferencesMenu.xib */,
 				389468CA1F56A34A00EF1F5E /* web */,
@@ -333,6 +336,7 @@
 				38788DC9231EA73C0005685A /* cedict.json in Resources */,
 				3817857B22D0E2240091268E /* phonex.js in Resources */,
 				389468CB1F56A34A00EF1F5E /* web in Resources */,
+				54F223488F57480B9C7F6FA2 /* pinyin_data.sqlite3 in Resources */,
 				F102C5A61F487DE80005B03F /* words_with_frequency_and_translation_and_ipa.sqlite3 in Resources */,
 				0D2BFD8F194588F400DE18D9 /* Images.xcassets in Resources */,
 				38DD401A1F5800A400A276CB /* PreferencesMenu.xib in Resources */,

@@ -13,7 +13,7 @@ extern ConversionEngine *engine;
 
 typedef NSInteger KeyCode;
 static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC = 53, KEY_ARROW_DOWN = 125, KEY_ARROW_UP = 126,
-                     KEY_RIGHT_SHIFT = 60;
+                     KEY_RIGHT_SHIFT = 60, KEY_RIGHT_COMMAND = 54;
 
 @interface InputController ()
 
@@ -39,6 +39,23 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
             return YES;
         }
 
+        // Right Command key: toggle pinyin mode
+        if (modifiers == 0 && _lastEventTypes[1] == NSEventTypeFlagsChanged && event.keyCode == KEY_RIGHT_COMMAND) {
+            _pinyinMode = !_pinyinMode;
+            NSString *bufferedText = [self originalBuffer];
+            if (bufferedText && bufferedText.length > 0) {
+                [self cancelComposition];
+                if (_pinyinMode) {
+                    // committing what was typed so far without space before entering pinyin mode
+                    [self commitCompositionWithoutSpace:sender];
+                } else {
+                    // committing hanzi without space before going back to english mode
+                    [self commitCompositionWithoutSpace:sender];
+                }
+            }
+            [self resetContext];
+        }
+
         if (modifiers == 0 && _lastEventTypes[1] == NSEventTypeFlagsChanged && _lastModifiers[1] == NSEventModifierFlagShift &&
             event.keyCode == KEY_RIGHT_SHIFT && !(_lastModifiers[0] & NSEventModifierFlagShift)) {
 
@@ -55,6 +72,11 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
         break;
     case NSEventTypeKeyDown:
         if (_defaultEnglishMode) {
+            break;
+        }
+
+        if (_pinyinMode && [self isPinyinChar:event]) {
+            handled = [self onPinyinKeyEvent:event client:sender];
             break;
         }
 
@@ -81,6 +103,82 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
     _lastModifiers[1] = modifiers;
     _lastEventTypes[1] = event.type;
     return handled;
+}
+
+- (BOOL)isPinyinChar:(NSEvent *)event {
+    NSString *characters = event.characters;
+    if (!characters || characters.length == 0)
+        return NO;
+    char ch = [characters characterAtIndex:0];
+    return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
+}
+
+- (BOOL)onPinyinKeyEvent:(NSEvent *)event client:(id)sender {
+    _currentClient = sender;
+    NSInteger keyCode = event.keyCode;
+    NSString *characters = event.characters;
+
+    NSString *bufferedText = [self originalBuffer];
+    bool hasBufferedText = bufferedText && bufferedText.length > 0;
+
+    if (keyCode == KEY_DELETE) {
+        if (hasBufferedText) {
+            return [self deleteBackward:sender];
+        }
+        return NO;
+    }
+
+    if (keyCode == KEY_SPACE) {
+        if (hasBufferedText) {
+            [self commitCompositionWithoutSpace:sender];
+            return YES;
+        }
+        return NO;
+    }
+
+    if (keyCode == KEY_RETURN) {
+        if (hasBufferedText) {
+            [self commitCompositionWithoutSpace:sender];
+            return YES;
+        }
+        return NO;
+    }
+
+    if (keyCode == KEY_ESC) {
+        [self cancelComposition];
+        [self reset];
+        [self resetContext];
+        return YES;
+    }
+
+    char ch = [characters characterAtIndex:0];
+    if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+        [self originalBufferAppend:characters client:sender];
+        [sharedCandidates updateCandidates];
+        [sharedCandidates show:kIMKLocateCandidatesBelowHint];
+        return YES;
+    }
+
+    if ([[NSCharacterSet decimalDigitCharacterSet] characterIsMember:ch]) {
+        if (hasBufferedText && [sharedCandidates isVisible]) {
+            int pressedNumber = characters.intValue;
+            NSString *candidate;
+            int pageSize = 9;
+            if (_currentCandidateIndex <= pageSize) {
+                candidate = _candidates[pressedNumber - 1];
+            } else {
+                candidate = _candidates[pageSize * (_currentCandidateIndex / pageSize - 1) + (_currentCandidateIndex % pageSize) +
+                                        pressedNumber - 1];
+            }
+            [self cancelComposition];
+            [self setComposedBuffer:candidate];
+            [self setOriginalBuffer:candidate];
+            [self commitCompositionWithoutSpace:sender];
+            return YES;
+        }
+    }
+
+    return NO;
 }
 
 - (BOOL)onKeyEvent:(NSEvent *)event client:(id)sender {
@@ -225,7 +323,7 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
 
     BOOL commitWordWithSpace = [preference boolForKey:@"commitWordWithSpace"];
 
-    if (commitWordWithSpace && text.length > 0) {
+    if (!_pinyinMode && commitWordWithSpace && text.length > 0) {
         char firstChar = [text characterAtIndex:0];
         char lastChar = [text characterAtIndex:text.length - 1];
         if (![[NSCharacterSet decimalDigitCharacterSet] characterIsMember:firstChar] && lastChar != '\'') {
@@ -353,6 +451,17 @@ static const KeyCode KEY_RETURN = 36, KEY_SPACE = 49, KEY_DELETE = 51, KEY_ESC =
 
 - (NSArray *)candidates:(id)sender {
     NSString *originalInput = [self originalBuffer];
+
+    if (_pinyinMode) {
+        NSArray *hanziList = [engine fetchHanZiByPinyinWithPrefix:originalInput];
+        if (hanziList.count == 0) {
+            _candidates = [NSMutableArray arrayWithArray:@[ originalInput ]];
+            return @[ originalInput ];
+        }
+        _candidates = [NSMutableArray arrayWithArray:hanziList];
+        return hanziList;
+    }
+
     NSArray *candidateList = [engine getCandidates:originalInput];
 
     // Blend n-gram predictions based on recent context

@@ -20,6 +20,7 @@
 7. 按键盘右侧`shift` 键可以在智能英语输入模式与传统英语输入模式间切换。
 8. 选词方式：数字键 1~9 及 `Enter` 回车键和 `Space` 空格键均可选词提交。`Space` 空格键选词默认会自动附加一个空格在单词后面，可以在配置页面关闭自动附加空格功能。`Enter` 回车键选词则不会附加空格。
 9. **上下文预测(Next-Word Prediction)**：基于 Google Books Ngram Corpus (2010-2019) 英语语料库的 n-gram 频率数据，在用户输入时根据前文预测下一个单词。例如输入"i do not"后，输入法会优先推荐"know"、"think"、"want"等高频后续词。目前默认关闭这个功能，需要在输入法配置中手动打开。
+10. **拼音输入中文(Pinyin to Chinese)**：按右 `Command` 键切换到拼音输入模式，输入拼音（或首字母缩写）即可打出中文汉字。例如输入 `niha` 或首字母 `nh`，候选词会显示"你好"、"你还"等。再次按右 `Command` 切回智能英语输入模式。
 
 # 下载与安装
 
@@ -105,7 +106,7 @@ GPL3(GNU GENERAL PUBLIC LICENSE Version 3)
 
 本输入法使用两个 SQLite 数据库，基于 FMDB (SQLite wrapper) 进行查询：
 
-1. **词库数据库**: `~/Library/Application Support/hallelujah/words_with_frequency_and_translation_and_ipa.sqlite3`
+1. **英文词库数据库**: `~/Library/Application Support/hallelujah/words_with_frequency_and_translation_and_ipa.sqlite3`
    - 包含约 140,402 个英文单词的词频、中文释义和国际音标
    - 包含约 9,955 条英语 n-gram (2~5 词短语) 频率数据，用于上下文预测
    - 安装时从 app bundle 自动复制到用户目录
@@ -138,7 +139,28 @@ GPL3(GNU GENERAL PUBLIC LICENSE Version 3)
    CREATE INDEX idx_ngrams_context ON ngrams(n, context);
    ```
 
-2. **自定义替换数据库**: `~/Library/Application Support/hallelujah/substitutions.sqlite3`
+2. **拼音数据库**: `~/Library/Application Support/hallelujah/pinyin_data.sqlite3`
+   - 包含约 55,320 条拼音→汉字映射，基于 Google 拼音词库
+   - 通过右 Command 键切换到拼音输入模式
+   - 支持完整拼音和首字母缩写两种输入方式
+   - 候选项按词频排序
+   - 安装时从 app bundle 自动复制到用户目录
+
+   表结构：
+
+   ```sql
+   CREATE TABLE pinyin_data (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       hz TEXT NOT NULL,      -- 汉字
+       py TEXT NOT NULL,      -- 完整拼音
+       abbr TEXT NOT NULL,    -- 拼音首字母缩写
+       freq REAL NOT NULL     -- 词频
+   );
+   CREATE INDEX idx_pinyin ON pinyin_data(py);
+   CREATE INDEX idx_abbr ON pinyin_data(abbr);
+   ```
+
+3. **自定义替换数据库**: `~/Library/Application Support/hallelujah/substitutions.sqlite3`
    - 存储用户自定义的 Text-Expander 替换规则
    - 可在偏好设置页面 (http://localhost:62718) 中添加/删除
    - 安装和更新时保留（不会被覆盖）
@@ -156,7 +178,8 @@ GPL3(GNU GENERAL PUBLIC LICENSE Version 3)
 
 1. [FMDB](https://github.com/ccgus/fmdb)，SQLite 数据库封装库，用于高效的前缀匹配查询。
 2. dictionary/cedict.json is transformed from [cc-cedict](https://cc-cedict.org/wiki/)，拼音-英语词库。
-3. [cmudict](http://www.speech.cs.cmu.edu/cgi-bin/cmudict) and https://github.com/mphilli/English-to-IPA， 国际音标。
+3. dictionary/pinyin_data.sqlite3 基于 Google 拼音词库 (65,105 条原始数据)，拼音-汉字映射。
+4. [cmudict](http://www.speech.cs.cmu.edu/cgi-bin/cmudict) and https://github.com/mphilli/English-to-IPA， 国际音标。
 4. [GCDWebServer](https://github.com/swisspol/GCDWebServer)，用于用户使用偏好配置。
 5. [talisman](https://github.com/Yomguithereal/talisman)，使用其中的 phonex 算法，实现模糊近似音输入。
 6. [MDCDamerauLevenshtein](https://github.com/modocache/MDCDamerauLevenshtein)，配合 talisman 的 phonex 算法，在音似词中按 Damerau Levenshtein 编辑距离筛选最接近的候选词。

@@ -11,6 +11,7 @@
     NSInteger _currentCandidateIndex;
     NSMutableArray *_candidates;
     BOOL _defaultEnglishMode;
+    BOOL _pinyinMode;
     id _currentClient;
     NSUInteger _lastModifiers[2];
     NSEventType _lastEventTypes[2];

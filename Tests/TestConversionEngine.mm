@@ -237,4 +237,73 @@
     }
 }
 
+#pragma mark - Pinyin Tests
+
+- (void)testFetchHanZiByPinyinFullPinyin {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@"niha"];
+    XCTAssertTrue(results.count >= 2);
+    XCTAssertTrue([[results objectAtIndex:0] isEqualToString:@"你好"]);
+}
+
+- (void)testFetchHanZiByPinyinAbbreviation {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@"nh"];
+    XCTAssertTrue(results.count > 0);
+    XCTAssertTrue([results containsObject:@"你好"]);
+    XCTAssertTrue([[results objectAtIndex:0] isEqualToString:@"你好"]);
+}
+
+- (void)testFetchHanZiByPinyinEnglishWord {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@"ceshi"];
+    XCTAssertTrue(results.count >= 3);
+    XCTAssertTrue([[results objectAtIndex:0] isEqualToString:@"测试"]);
+}
+
+- (void)testFetchHanZiByPinyinMultiChar {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@"zhongguo"];
+    XCTAssertTrue(results.count >= 5);
+    XCTAssertTrue([[results objectAtIndex:0] isEqualToString:@"中国"]);
+    XCTAssertTrue([[results objectAtIndex:1] isEqualToString:@"中国人"]);
+}
+
+- (void)testFetchHanZiByPinyinAbbreviationFirstResult {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@"rj"];
+    XCTAssertTrue(results.count >= 3);
+    XCTAssertTrue([[results objectAtIndex:0] isEqualToString:@"软件"]);
+}
+
+- (void)testFetchHanZiByPinyinEmptyInput {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@""];
+    XCTAssertTrue(results.count == 0);
+}
+
+- (void)testFetchHanZiByPinyinNilInput {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:nil];
+    XCTAssertTrue(results.count == 0);
+}
+
+- (void)testFetchHanZiByPinyinMaxResults {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@"a"];
+    XCTAssertTrue(results.count > 0);
+    XCTAssertTrue(results.count <= 20);
+}
+
+- (void)testFetchHanZiByPinyinNoDuplicates {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@"shi"];
+    NSSet *uniqueSet = [NSSet setWithArray:results];
+    XCTAssertEqual(results.count, uniqueSet.count, @"Pinyin results should not contain duplicates");
+}
+
+- (void)testFetchHanZiByPinyinFrequencyOrdering {
+    NSArray *results = [self.engine fetchHanZiByPinyinWithPrefix:@"zhongguo"];
+    // "中国" should be first since it has the highest frequency
+    XCTAssertTrue(results.count > 0);
+    XCTAssertTrue([[results objectAtIndex:0] isEqualToString:@"中国"]);
+}
+
+- (void)testFetchHanZiByPinyinUpperCaseInput {
+    NSArray *lower = [self.engine fetchHanZiByPinyinWithPrefix:@"nihao"];
+    NSArray *upper = [self.engine fetchHanZiByPinyinWithPrefix:@"NIHao"];
+    XCTAssertEqualObjects(lower, upper);
+}
+
 @end
